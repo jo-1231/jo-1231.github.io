@@ -8,23 +8,25 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <title>MMT Desktop Edition</title>
-
-
-
     <link href="https://fonts.googleapis.com/css?family=Shadows+Into+Light" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/4.9.1/firebase.js"></script>
+    <script src="fonctions.js"></script>
 </head>
+
 
 <body>
     <div id="barreNavigation">&nbsp;
-        <strong class="burgerMenu" onclick="afficherMenu()"></strong>
+        <span class="burgerMenu" onclick="afficherMenu()"></span>
         <h1 id="titre">MMT Lite</h1>
     </div>
 
     <div class="side_panel">
         <li>
-            <a href="#">
-                <ul class="side_panel_item" id="premier">User name
-                    <span class="courriel">user-email@hotmail.com</span>
+            <a href="#" onclick="testBDD()">
+                <ul class="side_panel_item" id="premier"> Your user name
+                    <br>
+                    <script type="text/javascript">document.write($_GET("username"))</script>
                 </ul>
             </a>
             <a href="#">
@@ -54,36 +56,25 @@
 
 
 <script>
-    //Gestion de l'affichage du menu latéral
-    var paneauVisible = false;
+    //Vérification de l'état de la connection
+    var userName = null;
+    userName = $_GET("username");
 
-    function afficherMenu() {
-
-        if (paneauVisible) {
-            $(".side_panel").animate({ left: '0px' });
-            $(".side_panel").css('display', 'inline-block');
-            paneauVisible = false;
-        } else {
-            $(".side_panel").animate({ left: '-290px' });
-            /*
-            $(".side_panel").css('display', 'none');
-            */
-            paneauVisible = true;
-        }
-
+    console.log("username is " + userName);
+    if (userName === null) {
+        window.location.href = 'index.html';
     }
 </script>
 
 
+
+<!--                      Affichage de la carte                 -->
 <script>
     //Détermine le taux de rafrauchissement des éléments de la carte
     var vitesseRafraichissement = 30000;
-
     function changerVitesse() {
-
         var dropDownMenuVitesse = document.getElementById("vitesse");
         var nomVitesse = dropDownMenuVitesse.options[dropDownMenuVitesse.selectedIndex].value;
-
 
         if (nomVitesse == "rapide") {
             vitesseRafraichissement = 30000;
@@ -92,20 +83,24 @@
         } else {
             vitesseRafraichissement = 900000;
         }
-
         console.log("Vitesse changée pour " + (vitesseRafraichissement / 1000) + " secondes");
     }
 
 
 
+    //Icone bleue pour la position de l'utilisateur
+    var image = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+    //Icone rouge normale pour les autres utilisateurs
+    var icon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
 
-    //Référence pour les icones Google
-    // http://maps.google.com/mapfiles/ms/icons/blue-dot.png
-    //  https://groups.google.com/forum/#!msg/Google-Maps-API/2k3T5hwI5Ck/RRso0D2jB1oJ
-
+    //Déclaration des variables globales qui seront utilisées
+    var map;
+    var marker;
+    var positionTemporaire = null;
 
     //Important que la méthode porte ce nom
     function initMap() {
+        
 
         /*Position de base au dessus de la ville de Québec*/
         var location = {
@@ -113,9 +108,8 @@
             lng: -71.287
         };
 
-
         /*Initialisation de la carte*/
-        var map = new google.maps.Map(document.getElementById("map"), {
+        map = new google.maps.Map(document.getElementById("map"), {
             zoom: 8,
             center: location,
             mapTypeControl: false,
@@ -126,52 +120,7 @@
         });
 
 
-
-
-        //Test d'affichage d'un autre utilisateur
-        marqueurJP = new google.maps.Marker({
-            position: {
-                lat: 46.790,
-                lng: -71.300
-            },
-            map: map,
-            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-        });
-
-
-
-
-        //Ajout d'un listener lors d'un click qui affiche la distance entre l'autre utilisateur et notre position
-        marqueurJP.addListener('click', function () {
-            //Calcul de la distance
-            var distance = google.maps.geometry.spherical.computeDistanceBetween(marqueurJP.position, marker.position);
-            //Création de la fenetre
-            var infoTest = new google.maps.InfoWindow({
-                content: 'JP est à ' + (distance/1000).toFixed(2) + ' km'
-            });
-            //Ouverture de la fenetre
-            infoTest.open(map, marqueurJP);
-        });
-
-
-
-
-
-
-
-
-
-        //Icone bleue pour la position de l'utilisateur
-        var image = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-
-
-
-        //La position de l'utilisateur est nulle par défaut
-        var marker = null;
-        var positionTemporaire = null;
-
         function refreshPosition() {
-
             //Obtention de la position de l'utilisateur
             navigator.geolocation.watchPosition(function (position) {
                 positionTemporaire = {
@@ -200,23 +149,111 @@
                         infowindow.open(map, marker);
                     });
                 }
-
             });
             //Utilisé pour le débuggage des positions
             console.log(positionTemporaire);
+            saveUserPosition();
             setTimeout(refreshPosition, vitesseRafraichissement);
         }
-
         //On appelle une fois la méthode qui se rapelle elle meme en boucle
         refreshPosition();
     }
+
+
+
+    //                  Gestion des marqueurs de position des utilisateurs
+
+    var listeMarqueurs = new Map();  //Création du dictionnaire de marqueurs vide
+
+    function ajouterMarqueur(p_Nom, p_Position) {
+        if (p_Nom != userName) {
+            //Insertion d'un élément
+            listeMarqueurs.set(p_Nom, new google.maps.Marker({ position: p_Position, map: map, icon: icon }));
+
+            //Ajout du listener qui affiche la fenetre d'info sur le marqueur
+            listeMarqueurs.get(p_Nom).addListener('click', function () {
+                //Calcul de la distance
+                var distance = google.maps.geometry.spherical.computeDistanceBetween(listeMarqueurs.get(p_Nom).position, marker.position);
+                //Création de la fenetre
+                var infoTest = new google.maps.InfoWindow({
+                    content: p_Nom + ' est à ' + (distance / 1000).toFixed(2) + ' km'
+                });
+                //Ouverture de la fenetre
+                infoTest.open(map, listeMarqueurs.get(p_Nom));
+            });
+        }
+    }
+
+            /*
+        Pour ajouter un marqueur
+        ajouterMarqueur('Jade', {
+            lat: 46.790,
+            lng: -71.300
+        });
+                //Pour débugage
+        //console.log('Marqueur ajouté');
+        //console.log(listeMarqueurs.get('Jade'));
+        */
 </script>
 
 
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4&callback=initMap&libraries=geometry" async
-    defer></script>
+
+
+
+
+
+
+<!--            Base de données                 -->
+<script>
+    // Initialize Firebase for data storage
+    var config = {
+        apiKey: "AIzaSyD0R04g6Zrb9W2TVnyzWuf7LbK-ZeDVqUk",
+        authDomain: "mmtdesktop-1517867631182.firebaseapp.com",
+        databaseURL: "https://mmtdesktop-1517867631182.firebaseio.com",
+        projectId: "mmtdesktop-1517867631182",
+        storageBucket: "mmtdesktop-1517867631182.appspot.com",
+        messagingSenderId: "265129366520"
+    };
+    firebase.initializeApp(config);
+</script>
+
+<script>
+    //On détermine le répertoire à observer
+    var dataBaseRoot = firebase.database().ref().child("Users");
+
+    //Pour s'abonner aux ajouts de valeurs
+    dataBaseRoot.on('child_added', function (dataSnapShot) {
+        //console.log(dataSnapShot.key);
+        //console.log(dataSnapShot.val());
+
+
+        //Retirer le commentaire pour activer
+        //ajouterMarqueur(dataSnapShot.key, dataSnapShot.val());
+    });
+
+    //Pour s'abonner aux changements d'une valeur
+    dataBaseRoot.on('child_changed', function (dataSnapShot) {
+        //console.log(dataSnapShot.key);
+        //console.log(dataSnapShot.val());
+
+        ajouterMarqueur(dataSnapShot.key, dataSnapShot.val());
+    });
+
+
+
+
+    //Sert a ajouter un utilisateur ou le modifier
+    function saveUserPosition() {
+        dataBaseRoot.child(userName).set(positionTemporaire);
+    }
+
+    saveUserPosition();
+</script>
+
+
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4&callback=initMap&libraries=geometry"
+    async defer></script>
 
 <!--Clé google:      AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4-->
-<!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4&callback=initMap" async
-    defer></script> -->
