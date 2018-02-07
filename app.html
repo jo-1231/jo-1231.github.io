@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="app.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <title>MMT Desktop Edition</title>
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=Shadows+Into+Light" rel="stylesheet">
+</head>
+
+<body>
+    <div id="barreNavigation">&nbsp;
+        <strong class="burgerMenu" onclick="afficherMenu()"></strong>
+        <h1 id="titre">MMT Lite</h1>
+    </div>
+
+    <div class="side_panel">
+        <li>
+            <a href="#">
+                <ul class="side_panel_item" id="premier">Jonathan Gagné
+                    <span class="courriel">jo-1231@hotmail.com</span>
+                </ul>
+            </a>
+            <a href="#">
+                <ul class="side_panel_item">Contacts</ul>
+            </a>
+
+            <ul class="side_panel_item">Rafraichissement
+                <select id="vitesse" onchange="changerVitesse()">
+                    <option value="rapide">30 secondes</option>
+                    <option value="moyen">1 minute</option>
+                    <option value="lent">5 minutes</option>
+                </select>
+            </ul>
+
+            <a href="index.html">
+                <ul class="side_panel_item" id="dernier">Se déconnecter</ul>
+            </a>
+        </li>
+    </div>
+
+    <div id="map">
+        &nbsp;
+    </div>
+</body>
+
+</html>
+
+
+<script>
+    //Gestion de l'affichage du menu latéral
+    var paneauVisible = false;
+
+    function afficherMenu() {
+
+        if (paneauVisible) {
+            $(".side_panel").animate({ left: '0px' });
+            $(".side_panel").css('display', 'inline-block');
+            paneauVisible = false;
+        } else {
+            $(".side_panel").animate({ left: '-290px' });
+            /*
+            $(".side_panel").css('display', 'none');
+            */
+            paneauVisible = true;
+        }
+
+    }
+</script>
+
+
+<script>
+    //Détermine le taux de rafrauchissement des éléments de la carte
+    var vitesseRafraichissement = 30000;
+
+    function changerVitesse() {
+
+        var dropDownMenuVitesse = document.getElementById("vitesse");
+        var nomVitesse = dropDownMenuVitesse.options[dropDownMenuVitesse.selectedIndex].value;
+
+
+        if (nomVitesse == "rapide") {
+            vitesseRafraichissement = 30000;
+        } else if (nomVitesse == "moyen") {
+            vitesseRafraichissement = 60000;
+        } else {
+            vitesseRafraichissement = 900000;
+        }
+
+        console.log("Vitesse changée pour " + (vitesseRafraichissement / 1000) + " secondes");
+    }
+
+
+
+
+    //Référence pour les icones Google
+    // http://maps.google.com/mapfiles/ms/icons/blue-dot.png
+    //  https://groups.google.com/forum/#!msg/Google-Maps-API/2k3T5hwI5Ck/RRso0D2jB1oJ
+
+
+    //Important que la méthode porte ce nom
+    function initMap() {
+
+        /*Position de base au dessus de la ville de Québec*/
+        var location = {
+            lat: 46.7888,
+            lng: -71.287
+        };
+
+
+        /*Initialisation de la carte*/
+        var map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 8,
+            center: location,
+            mapTypeControl: false,
+            zoomControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            clickableIcons: false
+        });
+
+
+
+
+        //Test d'affichage d'un autre utilisateur
+        marqueurJP = new google.maps.Marker({
+            position: {
+                lat: 46.790,
+                lng: -71.300
+            },
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        });
+
+
+
+
+        //Ajout d'un listener lors d'un click qui affiche la distance entre l'autre utilisateur et notre position
+        marqueurJP.addListener('click', function () {
+            //Calcul de la distance
+            var distance = google.maps.geometry.spherical.computeDistanceBetween(marqueurJP.position, marker.position);
+            //Création de la fenetre
+            var infoTest = new google.maps.InfoWindow({
+                content: 'JP est à ' + (distance/1000).toFixed(2) + ' km'
+            });
+            //Ouverture de la fenetre
+            infoTest.open(map, marqueurJP);
+        });
+
+
+
+
+
+
+
+
+
+        //Icone bleue pour la position de l'utilisateur
+        var image = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+
+
+
+        //La position de l'utilisateur est nulle par défaut
+        var marker = null;
+        var positionTemporaire = null;
+
+        function refreshPosition() {
+
+            //Obtention de la position de l'utilisateur
+            navigator.geolocation.watchPosition(function (position) {
+                positionTemporaire = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                //Marqueur de l'utilisateur
+                if (positionTemporaire != null) {
+                    if (marker) {
+                        marker.setPosition(positionTemporaire);
+                    } else {
+                        marker = new google.maps.Marker({
+                            position: positionTemporaire,
+                            map: map,
+                            icon: image
+                        });
+                    }
+
+                    /*Bulle d'info de l'utilisateur*/
+                    var infowindow = new google.maps.InfoWindow({
+                        content: 'Vous etes ici'
+                    });
+                    //Listener pour afficher la bulle d'info lors d'un click
+                    marker.addListener('click', function () {
+                        infowindow.open(map, marker);
+                    });
+                }
+
+            });
+            //Utilisé pour le débuggage des positions
+            console.log(positionTemporaire);
+            setTimeout(refreshPosition, vitesseRafraichissement);
+        }
+
+        //On appelle une fois la méthode qui se rapelle elle meme en boucle
+        refreshPosition();
+    }
+</script>
+
+
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4&callback=initMap&libraries=geometry" async
+    defer></script>
+
+<!--Clé google:      AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4-->
+<!-- <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCpjTTpGeBk2pZmoye1WNiY7FplYjYjwo4&callback=initMap" async
+    defer></script> -->

@@ -1,0 +1,66 @@
+html{
+    height: 100%;
+}
+
+body{
+    height: 100%;
+    background-color: rgb(73, 73, 230);
+    vertical-align: middle;
+    
+
+    text-align: center;
+    align-content: center;
+}
+
+h1{
+    color: white;
+    text-align: center;
+    font-family: 'Shadows Into Light', cursive;
+    margin-bottom: 0px;
+}
+
+h2{
+    color: white;
+    font-family: 'Shadows Into Light', cursive;
+    display: inline-block;
+    position: relative;
+    left:25%;
+    margin: 0px;
+    transform: rotate(-30deg);
+}
+
+form{
+    text-align: center;
+}
+
+input{
+    height: 35px;
+    margin: 10px;
+    position: relative;
+    width: 300px; 
+}
+
+#logInButton{
+    background-color: rgba(89, 185, 230, 0.836);
+    border: none;
+}
+
+contenantImage{
+    width: 100%;
+    text-align: center;
+    align-content: center;
+}
+
+img{
+    display: block;
+    margin: auto;
+}
+
+.contenu{
+   /* display: inline-block; */
+    
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
