@@ -23,12 +23,10 @@
 
     <div class="side_panel">
         <li>
-            <a href="#">
-                <ul class="side_panel_item" id="premier"> Votre nom d'utilisateur
-                    <br>
-                    <script type="text/javascript">document.write($_GET("username"))</script>
-                </ul>
-            </a>
+            <ul class="side_panel_item" id="premier"> Votre nom d'utilisateur
+                <br>
+                <script type="text/javascript">document.write($_GET("username"))</script>
+            </ul>
             <a href="#">
                 <ul class="side_panel_item">Contacts</ul>
             </a>
@@ -47,6 +45,7 @@
         </li>
     </div>
 
+    <img src="positionIcon.png" alt="" id="positionIcon" onclick="centrerCarte()" on-tap="centrerCarte()">
     <div id="map">
         &nbsp;
     </div>
@@ -88,6 +87,10 @@
 
 
 
+
+
+
+
     //Icone bleue pour la position de l'utilisateur
     var image = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
     //Icone rouge normale pour les autres utilisateurs
@@ -100,7 +103,7 @@
 
     //Important que la méthode porte ce nom
     function initMap() {
-        
+
 
         /*Position de base au dessus de la ville de Québec*/
         var location = {
@@ -118,6 +121,9 @@
             fullscreenControl: false,
             clickableIcons: false
         });
+
+
+
 
 
         function refreshPosition() {
@@ -157,6 +163,12 @@
         }
         //On appelle une fois la méthode qui se rapelle elle meme en boucle
         refreshPosition();
+    }
+
+    //Sert à centrer la carte par rapport à l'utilisateur et zoomer
+    function centrerCarte(){
+        map.setCenter(positionTemporaire);
+        map.setZoom(14);
     }
 
 
