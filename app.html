@@ -17,13 +17,13 @@
 
 <body>
     <div id="barreNavigation">&nbsp;
-        <span class="burgerMenu" onclick="afficherMenu()"></span>
+        <span class="burgerMenu" onclick="afficherMenu()" on-tap="afficherMenu()"></span>
         <h1 id="titre">MMT Lite</h1>
     </div>
 
     <div class="side_panel">
         <li>
-            <a href="#" onclick="testBDD()">
+            <a href="#">
                 <ul class="side_panel_item" id="premier"> Votre nom d'utilisateur
                     <br>
                     <script type="text/javascript">document.write($_GET("username"))</script>
@@ -35,9 +35,9 @@
 
             <ul class="side_panel_item">Rafraichissement
                 <select id="vitesse" onchange="changerVitesse()">
-                    <option value="rapide">30 secondes</option>
-                    <option value="moyen">1 minute</option>
-                    <option value="lent">5 minutes</option>
+                    <option value="rapide">3 secondes</option>
+                    <option value="moyen">15 secondes</option>
+                    <option value="lent">30 secondes</option>
                 </select>
             </ul>
 
@@ -71,17 +71,17 @@
 <!--                      Affichage de la carte                 -->
 <script>
     //Détermine le taux de rafrauchissement des éléments de la carte
-    var vitesseRafraichissement = 30000;
+    var vitesseRafraichissement = 3000;
     function changerVitesse() {
         var dropDownMenuVitesse = document.getElementById("vitesse");
         var nomVitesse = dropDownMenuVitesse.options[dropDownMenuVitesse.selectedIndex].value;
 
         if (nomVitesse == "rapide") {
-            vitesseRafraichissement = 30000;
+            vitesseRafraichissement = 3000;
         } else if (nomVitesse == "moyen") {
-            vitesseRafraichissement = 60000;
+            vitesseRafraichissement = 15000;
         } else {
-            vitesseRafraichissement = 900000;
+            vitesseRafraichissement = 30000;
         }
         console.log("Vitesse changée pour " + (vitesseRafraichissement / 1000) + " secondes");
     }
@@ -229,7 +229,7 @@
 
 
         //Retirer le commentaire pour activer
-        ajouterMarqueur(dataSnapShot.key, dataSnapShot.val());
+        //ajouterMarqueur(dataSnapShot.key, dataSnapShot.val());
     });
 
     //Pour s'abonner aux changements d'une valeur

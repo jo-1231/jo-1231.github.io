@@ -6,7 +6,7 @@ function afficherMenu() {
         $(".side_panel").animate({ left: '0px' });
         paneauVisible = false;
     } else {
-        $(".side_panel").animate({ left: '-290px' });
+        $(".side_panel").animate({ left: '-330px' });
         paneauVisible = true;
     }
 }
